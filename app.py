@@ -25,7 +25,31 @@ from unittest.mock import MagicMock
 sys.modules['transformers.integrations.deepgemm'] = MagicMock()
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-32B-Instruct"
-ADAPTER_PATH = "/workspace/shared/lavanya/Java-Dataset-New/java-dataset/RAG-Implemenation/java-vuln-adapter-32b-full"
+
+# Try multiple candidate paths to find the adapter weights directory
+ADAPTER_PATH_CANDIDATES = [
+    # 1. Parent directory level (where the notebooks live)
+    "/workspace/shared/lavanya/Java-Dataset-New/java-dataset/java-vuln-adapter-32b-full",
+    "../java-vuln-adapter-32b-full",
+    "../../java-vuln-adapter-32b-full",
+    # 2. Inside the current working directory
+    "./java-vuln-adapter-32b-full",
+    # 3. Old FastAPI session path
+    "/workspace/shared/lavanya/Java-Dataset-New/java-dataset/RAG-Implemenation/java-vuln-adapter-32b-full"
+]
+
+ADAPTER_PATH = None
+for candidate in ADAPTER_PATH_CANDIDATES:
+    abs_candidate = os.path.abspath(candidate)
+    if os.path.exists(abs_candidate) and os.path.exists(os.path.join(abs_candidate, "adapter_config.json")):
+        ADAPTER_PATH = abs_candidate
+        print(f"🎯 Successfully resolved model adapter path to: {ADAPTER_PATH}")
+        break
+
+if ADAPTER_PATH is None:
+    # Default fallback if not found anywhere (so it prints the absolute path in the logs)
+    ADAPTER_PATH = os.path.abspath(ADAPTER_PATH_CANDIDATES[0])
+    print(f"⚠️ Warning: Could not find adapter directory. Falling back to: {ADAPTER_PATH}")
 
 # ==========================================
 # 2. MODEL LOADING & INFERENCE
