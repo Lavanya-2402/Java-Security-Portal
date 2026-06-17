@@ -93,29 +93,14 @@ def build_augmented_prompt(code_content: str, vuln_type: str = None) -> tuple:
     if not vuln_type or vuln_type == "Secure Code":
         vuln_type = detect_vulnerability_type(code_content)
         
-    vuln_info = retrieve_vulnerability_info(vuln_type)
-    
-    reference_block = ""
-    if vuln_info and vuln_type != "Secure Code":
-        reference_block = f"""
----
-[OFFICIAL MITRE SECURITY GUIDELINES FOR MITIGATION]
-Vulnerability: {vuln_info['cwe']}
-Description: {vuln_info['description']}
-Remediation Guidance: {vuln_info['remediation']}
----
-"""
-
-    system_prompt = f"""You are an expert Java security auditor. Analyze the provided code.
-Use the MITRE security guidelines below to guide your remediation fix.
-{reference_block}
+    system_prompt = """You are an expert Java security auditor. Analyze the provided code.
 If the code is secure, output:
 "This Java code is completely secure and contains no vulnerabilities. No changes are required."
 
 If the code is vulnerable, output your analysis in this exact format:
-### 🛡️ Finding 1
+### 🛡️ Vulnerability Analysis
 *   **Status**: VULNERABLE
-*   **Type**: {vuln_type if vuln_info else '[Vulnerability Type]'}
+*   **Type**: [Vulnerability Type]
 *   **Severity**: HIGH
 
 ### 📝 Explanation
@@ -128,7 +113,7 @@ If the code is vulnerable, output your analysis in this exact format:
 
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Analyze the following Java code and fix the vulnerability:\n\n{code_content}"}
+        {"role": "user", "content": f"Analyze the following Java code. If a vulnerability exists, provide the fixed code. If it is safe, output the original code.\n\n{code_content}"}
     ], vuln_type
 
 # ==========================================

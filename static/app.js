@@ -95,10 +95,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Helper to escape HTML characters
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     // Render results in the UI
     function renderResults(result) {
         remediatedCode.value = result.fixed_code;
-        explanationBox.innerText = result.explanation;
+        
+        const safeExplanation = escapeHtml(result.explanation);
+        const safeRawOutput = escapeHtml(result.raw_output || "");
+        
+        explanationBox.innerHTML = `
+            <div style="white-space: pre-wrap;">${safeExplanation}</div>
+            ${result.raw_output ? `
+            <details style="margin-top: 18px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.82rem; font-weight: 600; outline: none; user-select: none;">🤖 View Raw GPU Model Output</summary>
+                <pre style="margin-top: 10px; white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; color: #a5b4fc; background: #030712; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); max-height: 300px; overflow-y: auto; text-align: left;">${safeRawOutput}</pre>
+            </details>` : ''}
+        `;
 
         // Render Status Badges
         const severityClass = result.severity === "SECURE" ? "badge-secure" : "badge-vulnerable";

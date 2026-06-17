@@ -89,7 +89,7 @@ def extract_content(output_text: str) -> tuple:
     # 3. Extract explanation
     explanation = ""
     explanation_match = re.search(
-        r"###\s*.*Explanation\s*(.*?)\s*(###\s*.*Fixed Code|###\s*.*Code|```(?:java)?|$)", 
+        r"#+\s*.*Explanation\s*(.*?)\s*(#+\s*.*Fixed Code|#+\s*.*Code|```(?:java)?|$)", 
         output_text, 
         re.DOTALL | re.IGNORECASE
     )
@@ -106,10 +106,10 @@ def extract_content(output_text: str) -> tuple:
             parts = output_text.split(code)
             temp_text = parts[0]
             
-        temp_text = re.sub(r"###\s*.*Finding\s*\d+", "", temp_text, flags=re.IGNORECASE)
-        temp_text = re.sub(r"###\s*.*Vulnerability\s*Analysis", "", temp_text, flags=re.IGNORECASE)
-        temp_text = re.sub(r"###\s*.*Explanation", "", temp_text, flags=re.IGNORECASE)
-        temp_text = re.sub(r"###\s*.*Fixed\s*Code", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"#+\s*.*Finding\s*\d+", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"#+\s*.*Vulnerability\s*Analysis", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"#+\s*.*Explanation", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"#+\s*.*Fixed\s*Code", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Status\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Type\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Severity\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
@@ -148,9 +148,8 @@ def run_remediation_task(task_id: str, code_content: str):
         with torch.no_grad():
             outputs = model_obj.generate(
                 **inputs,
-                max_new_tokens=1024,
-                temperature=0.1,
-                do_sample=True,
+                max_new_tokens=1200,
+                do_sample=False,
                 use_cache=True,
                 pad_token_id=tokenizer_obj.eos_token_id
             )
@@ -176,12 +175,17 @@ def run_remediation_task(task_id: str, code_content: str):
             print(f"FIXED CODE:\n{fixed_code}")
             print("=============================================================\n")
             
-            # Extract vulnerability type override from LLM finding section
-            type_match = re.search(r"\*\s+\*\*Type\*\*:\s*([^\n\r]+)", generated_text, re.IGNORECASE)
-            if type_match:
-                final_cat = type_match.group(1).strip()
+            # If the fixed code is identical to the input code, it means no changes were made (already secure)
+            if fixed_code.strip() == code_content.strip():
+                final_cat = "Secure Code"
+                explanation = "This Java code is secure. No vulnerability was detected or remediation required."
             else:
-                final_cat = category
+                # Extract vulnerability type override from LLM finding section
+                type_match = re.search(r"\*\s+\*\*Type\*\*:\s*([^\n\r]+)", generated_text, re.IGNORECASE)
+                if type_match:
+                    final_cat = type_match.group(1).strip()
+                else:
+                    final_cat = category
                 
         cwe_info = retrieve_vulnerability_info(final_cat)
         
@@ -202,7 +206,8 @@ def run_remediation_task(task_id: str, code_content: str):
                 "explanation": explanation,
                 "fixed_code": fixed_code,
                 "validation_status": validation_status,
-                "is_valid": is_valid
+                "is_valid": is_valid,
+                "raw_output": generated_text
             }
         }
         print(f"Task {task_id} completed successfully.")
