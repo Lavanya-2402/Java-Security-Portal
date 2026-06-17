@@ -150,6 +150,9 @@ def run_remediation_task(task_id: str, code_content: str):
         messages, _ = build_augmented_prompt(code_content, category)
         
         # 3. Model Inference
+        import time
+        start_time = time.time()
+        
         prompt_text = tokenizer_obj.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = tokenizer_obj(prompt_text, return_tensors="pt").to(model_obj.device)
         
@@ -162,7 +165,14 @@ def run_remediation_task(task_id: str, code_content: str):
                 pad_token_id=tokenizer_obj.eos_token_id
             )
             
+        end_time = time.time()
+        inference_time = round(end_time - start_time, 2)
+        
         generated_text = tokenizer_obj.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+        
+        # Calculate tokens count and speed
+        tokens_count = len(outputs[0]) - inputs.input_ids.shape[1]
+        tokens_per_sec = round(tokens_count / inference_time, 1) if inference_time > 0 else 0
         
         # 4. Parse Results
         is_secure = "completely secure" in generated_text.lower() or "no changes are required" in generated_text.lower()
@@ -206,7 +216,12 @@ def run_remediation_task(task_id: str, code_content: str):
                 "fixed_code": fixed_code,
                 "validation_status": validation_status,
                 "is_valid": is_valid,
-                "raw_output": generated_text
+                "raw_output": generated_text,
+                "metrics": {
+                    "inference_time": inference_time,
+                    "tokens_per_sec": tokens_per_sec,
+                    "resource_status": "GPU Standalone"
+                }
             }
         }
         print(f"Task {task_id} completed successfully.")

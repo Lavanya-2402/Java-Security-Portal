@@ -11,79 +11,153 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Glowing Compact Header Banner -->
-        <header class="header-banner">
-            <div class="header-content">
-                <h1>SecureCode AI</h1>
-                <p>Fine-Tuned 32B Model & RAG-Augmented Remediation Pipeline</p>
+    <!-- App Main Layout Wrapper -->
+    <div class="app-wrapper">
+        <!-- Collapsible Scan History Sidebar -->
+        <aside id="sidebar" class="sidebar collapsed">
+            <div class="sidebar-header">
+                <h3>📜 Scan History</h3>
+                <button id="sidebar-close-btn" class="sidebar-close-btn">✕</button>
             </div>
-            <div class="team-badge">Team 3276</div>
-        </header>
+            <div id="history-list" class="history-list">
+                <span class="empty-history">No scans recorded yet</span>
+            </div>
+        </aside>
 
-        <!-- Main Layout Split Grid -->
-        <main class="grid-layout">
-            <!-- Left Pane: Input Code -->
-            <section class="card panel-input">
-                <div class="panel-header">
-                    <h2>📥 Input Java Code</h2>
-                    <span class="editor-desc">Paste your vulnerable or secure Java code</span>
-                </div>
-                <div class="panel-body">
-                    <div class="editor-container">
-                        <div class="editor-tab-bar">
-                            <span class="editor-tab active">Input.java</span>
+        <!-- Main Workspace Area -->
+        <div class="main-workspace">
+            <div class="container">
+                <!-- Glowing Compact Header Banner -->
+                <header class="header-banner">
+                    <div class="header-left">
+                        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Scan History">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div class="header-content">
+                            <h1>SecureCode AI</h1>
+                            <p>Fine-Tuned 32B Model & RAG-Augmented Remediation Pipeline</p>
                         </div>
-                        <textarea id="input-code" placeholder="Paste your Java code snippet here..." spellcheck="false"></textarea>
                     </div>
-                    <button id="scan-btn" class="btn btn-primary">🔍 Scan & Remediate Code</button>
-                </div>
-            </section>
+                    <div class="team-badge">Team 3276</div>
+                </header>
 
-            <!-- Right Pane: Remediated Output -->
-            <section class="card panel-output">
-                <div class="panel-header">
-                    <h2>📤 Remediated Java Code</h2>
-                    <span class="editor-desc">Remediated & validated source code</span>
+                <!-- Toggle Bar for View Modes -->
+                <div class="view-toggle-bar">
+                    <button id="btn-editor-view" class="view-toggle-btn active">💻 Side-by-Side Editors</button>
+                    <button id="btn-diff-view" class="view-toggle-btn">🔍 Unified Diff View</button>
                 </div>
-                <div class="panel-body">
-                    <div class="editor-container">
-                        <div class="editor-tab-bar">
-                            <span class="editor-tab active">Remediated.java</span>
+
+                <!-- Main Layout Split Grid (Editors) -->
+                <div id="editors-layout" class="grid-layout">
+                    <!-- Left Pane: Input Code -->
+                    <section class="card panel-input">
+                        <div class="panel-header">
+                            <h2>📥 Input Java Code</h2>
+                            <span class="editor-desc">Paste your vulnerable or secure Java code</span>
                         </div>
-                        <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
+                        <div class="panel-body">
+                            <div class="editor-container">
+                                <div class="editor-tab-bar">
+                                    <span class="editor-tab active">Input.java</span>
+                                </div>
+                                <textarea id="input-code" placeholder="Paste your Java code snippet here..." spellcheck="false"></textarea>
+                            </div>
+                            <button id="scan-btn" class="btn btn-primary">🔍 Scan & Remediate Code</button>
+                        </div>
+                    </section>
+
+                    <!-- Right Pane: Remediated Output -->
+                    <section class="card panel-output">
+                        <div class="panel-header">
+                            <h2>📤 Remediated Java Code</h2>
+                            <span class="editor-desc">Remediated & validated source code</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="editor-container">
+                                <div class="editor-tab-bar">
+                                    <span class="editor-tab active">Remediated.java</span>
+                                </div>
+                                <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
+                            </div>
+                            <div class="output-actions">
+                                <button id="download-btn" class="btn btn-secondary" style="margin-right: 10px;">📥 Download File</button>
+                                <button id="copy-btn" class="btn btn-secondary">📋 Copy Code</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Unified Diff View Container -->
+                <div id="diff-layout" class="diff-layout card hidden">
+                    <div class="panel-header">
+                        <h2>🔍 Unified Diff View</h2>
+                        <span class="editor-desc">Line-by-line differences (additions in green, deletions in red)</span>
                     </div>
-                    <div class="output-actions">
-                        <button id="download-btn" class="btn btn-secondary" style="margin-right: 10px;">📥 Download File</button>
-                        <button id="copy-btn" class="btn btn-secondary">📋 Copy Code</button>
+                    <div class="diff-container">
+                        <pre id="diff-content" class="diff-content"></pre>
                     </div>
                 </div>
-            </section>
-        </main>
 
-        <!-- Loading Spinner Container -->
-        <div id="loading-overlay" class="hidden">
-            <div class="spinner-box">
-                <div class="spinner"></div>
-                <p id="loading-text">Analyzing code with GPU model...</p>
+                <!-- Loading Spinner Container -->
+                <div id="loading-overlay" class="hidden">
+                    <div class="spinner-box">
+                        <div class="spinner"></div>
+                        <p id="loading-text">Analyzing code with GPU model...</p>
+                    </div>
+                </div>
+
+                <!-- Scan Results & Badges -->
+                <section id="results-section" class="card hidden">
+                    <div class="results-header">
+                        <h3>🔍 Scan Analysis Results</h3>
+                        <div id="status-badges">
+                            <!-- Badges injected dynamically here -->
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Widgets Row -->
+                    <div class="dashboard-row">
+                        <!-- Risk Score Circular Gauge -->
+                        <div class="dashboard-card risk-card">
+                            <div class="risk-gauge-box">
+                                <svg class="gauge-svg" viewBox="0 0 100 100">
+                                    <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                                    <circle id="gauge-fill" class="gauge-fill" cx="50" cy="50" r="40"></circle>
+                                    <text id="gauge-text" x="50" y="56" class="gauge-text">0%</text>
+                                </svg>
+                                <span class="gauge-label">Vulnerability Risk</span>
+                            </div>
+                        </div>
+
+                        <!-- GPU Performance Metrics -->
+                        <div class="dashboard-card metrics-card">
+                            <h4>⚡ Performance Metrics</h4>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-val" id="metric-time">0.0s</span>
+                                    <span class="metric-lbl">Inference Time</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-val" id="metric-speed">0 t/s</span>
+                                    <span class="metric-lbl">Inference Speed</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-val" id="metric-resource">GPU Standalone</span>
+                                    <span class="metric-lbl">Resource Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CWE Guidelines & Detailed Analysis Injected Here -->
+                    <div id="cwe-card" class="cwe-card">
+                        <!-- Injected dynamically via app.js -->
+                    </div>
+                </section>
             </div>
         </div>
-
-        <!-- Scan Results & Badges -->
-        <section id="results-section" class="card hidden">
-            <div class="results-header">
-                <h3>🔍 Scan Analysis Results</h3>
-                <div id="status-badges">
-                    <!-- Badges injected dynamically here -->
-                </div>
-            </div>
-
-            <!-- CWE Guidelines & Detailed Analysis Injected Here -->
-            <div id="cwe-card" class="cwe-card">
-                <!-- Injected dynamically via app.js -->
-            </div>
-        </section>
-
     </div>
 
     <!-- Include Javascript logic -->
