@@ -66,12 +66,12 @@ def get_model_and_tokenizer():
 
 def extract_content(output_text: str) -> tuple:
     """Extracts explanation and code block from the model's output structured format."""
-    # 1. Find the code block first (case-insensitive for 'java')
-    code_match = re.search(r"```java\s*(.*?)\s*```", output_text, re.DOTALL | re.IGNORECASE)
+    # 1. Find the code block first (case-insensitive for 'java', allows missing closing backticks)
+    code_match = re.search(r"```java\s*(.*?)(?:```|$)", output_text, re.DOTALL | re.IGNORECASE)
     code = code_match.group(1).strip() if code_match else ""
     
     if not code:
-        code_match = re.search(r"```\s*(.*?)\s*```", output_text, re.DOTALL)
+        code_match = re.search(r"```\s*(.*?)(?:```|$)", output_text, re.DOTALL)
         code = code_match.group(1).strip() if code_match else ""
         
     if not code:
@@ -93,8 +93,8 @@ def extract_content(output_text: str) -> tuple:
         # Fallback: remove the code block and headers, use the remaining text as explanation
         temp_text = output_text
         if code:
-            temp_text = re.sub(r"```java\s*.*?\s*```", "", temp_text, flags=re.DOTALL | re.IGNORECASE)
-            temp_text = re.sub(r"```\s*.*?\s*```", "", temp_text, flags=re.DOTALL)
+            temp_text = re.sub(r"```java\s*.*?\s*(?:```|$)", "", temp_text, flags=re.DOTALL | re.IGNORECASE)
+            temp_text = re.sub(r"```\s*.*?\s*(?:```|$)", "", temp_text, flags=re.DOTALL)
             
         # Clean up header finding lines
         temp_text = re.sub(r"###\s*.*Finding\s*\d+", "", temp_text, flags=re.IGNORECASE)
@@ -135,7 +135,7 @@ def run_remediation_task(task_id: str, code_content: str):
         with torch.no_grad():
             outputs = model_obj.generate(
                 **inputs,
-                max_new_tokens=512,
+                max_new_tokens=1024,
                 temperature=0.1,
                 do_sample=True,
                 use_cache=True,
@@ -190,6 +190,12 @@ def run_remediation_task(task_id: str, code_content: str):
             "status": "failed",
             "error": str(e)
         }
+
+@app.on_event("startup")
+def startup_event():
+    """Load model on startup (main thread) so that background threads run safely."""
+    print("⏳ Pre-loading GPU model on startup...")
+    get_model_and_tokenizer()
 
 @app.post("/api/analyze")
 async def analyze_code(request: AnalyzeRequest, background_tasks: BackgroundTasks):
