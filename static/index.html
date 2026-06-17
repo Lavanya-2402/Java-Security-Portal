@@ -23,7 +23,12 @@
                     <span class="editor-desc">Paste your vulnerable or secure Java code</span>
                 </div>
                 <div class="panel-body">
-                    <textarea id="input-code" placeholder="Paste your Java code snippet here..." spellcheck="false"></textarea>
+                    <div class="editor-container">
+                        <div class="editor-tab-bar">
+                            <span class="editor-tab active">Input.java</span>
+                        </div>
+                        <textarea id="input-code" placeholder="Paste your Java code snippet here..." spellcheck="false"></textarea>
+                    </div>
                     <button id="scan-btn" class="btn btn-primary">🔍 Scan & Remediate Code</button>
                 </div>
             </section>
@@ -35,7 +40,12 @@
                     <span class="editor-desc">Remediated & validated source code</span>
                 </div>
                 <div class="panel-body">
-                    <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
+                    <div class="editor-container">
+                        <div class="editor-tab-bar">
+                            <span class="editor-tab active">Remediated.java</span>
+                        </div>
+                        <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
+                    </div>
                     <div class="output-actions">
                         <button id="copy-btn" class="btn btn-secondary">📋 Copy Code</button>
                     </div>
