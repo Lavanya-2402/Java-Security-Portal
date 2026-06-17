@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMD Instinct™ Java Security Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Glowing Header Banner -->
+        <header class="header-banner">
+            <h1>AMD Instinct™ Java Security Portal</h1>
+            <p>Fine-Tuned 32B Model & RAG-Augmented Remediation Pipeline</p>
+        </header>
+
+        <!-- Main Layout Split Grid -->
+        <main class="grid-layout">
+            <!-- Left Pane: Input Code -->
+            <section class="card panel-input">
+                <div class="panel-header">
+                    <h2>📥 Input Java Code</h2>
+                    <span class="editor-desc">Paste your vulnerable or secure Java code</span>
+                </div>
+                <div class="panel-body">
+                    <textarea id="input-code" placeholder="Paste your Java code snippet here..." spellcheck="false"></textarea>
+                    <button id="scan-btn" class="btn btn-primary">🔍 Scan & Remediate Code</button>
+                </div>
+            </section>
+
+            <!-- Right Pane: Remediated Output -->
+            <section class="card panel-output">
+                <div class="panel-header">
+                    <h2>📤 Remediated Java Code</h2>
+                    <span class="editor-desc">Remediated & validated source code</span>
+                </div>
+                <div class="panel-body">
+                    <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
+                    <div class="output-actions">
+                        <button id="copy-btn" class="btn btn-secondary">📋 Copy Code</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Spinner Container -->
+        <div id="loading-overlay" class="hidden">
+            <div class="spinner-box">
+                <div class="spinner"></div>
+                <p id="loading-text">Analyzing code with AMD Instinct GPU...</p>
+            </div>
+        </div>
+
+        <!-- Scan Results & Badges -->
+        <section id="results-section" class="card hidden">
+            <div class="results-header">
+                <h3>🔍 Scan Analysis Results</h3>
+                <div id="status-badges">
+                    <!-- Badges injected dynamically here -->
+                </div>
+            </div>
+
+            <!-- CWE Guidelines Card -->
+            <div id="cwe-card" class="cwe-card">
+                <!-- CWE reference info injected here -->
+            </div>
+
+            <!-- Detailed Analysis Markdown -->
+            <div class="analysis-details">
+                <h4>📝 Detailed Vulnerability & Fix Analysis</h4>
+                <div id="explanation-box" class="explanation-box">
+                    <!-- Explanation text injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Examples Panel -->
+        <section class="card examples-panel">
+            <h3>💡 Interactive Vulnerability Snippets</h3>
+            <p class="examples-desc">Select an example snippet below to load it into the editor:</p>
+            <div class="examples-grid">
+                <button class="example-btn" data-type="sqli">SQL Injection</button>
+                <button class="example-btn" data-type="path">Path Traversal</button>
+                <button class="example-btn" data-type="cmd">Command Injection</button>
+                <button class="example-btn" data-type="xss">Cross-Site Scripting</button>
+                <button class="example-btn" data-type="deserial">Insecure Deserialization</button>
+                <button class="example-btn" data-type="buffer">Buffer Overflow</button>
+                <button class="example-btn" data-type="secure">Secure Code</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Include Javascript logic -->
+    <script src="app.js"></script>
+</body>
+</html>
