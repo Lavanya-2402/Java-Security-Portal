@@ -164,10 +164,6 @@ def run_remediation_task(task_id: str, code_content: str):
             
         generated_text = tokenizer_obj.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
         
-        print("\n=================== DEBUG: MODEL GENERATED TEXT ===================")
-        print(generated_text)
-        print("===================================================================\n")
-        
         # 4. Parse Results
         is_secure = "completely secure" in generated_text.lower() or "no changes are required" in generated_text.lower()
         
@@ -177,11 +173,6 @@ def run_remediation_task(task_id: str, code_content: str):
             fixed_code = code_content
         else:
             explanation, fixed_code = extract_content(generated_text)
-            
-            print("\n=================== DEBUG: PARSED CONTENT ===================")
-            print(f"EXPLANATION:\n{explanation}\n")
-            print(f"FIXED CODE:\n{fixed_code}")
-            print("=============================================================\n")
             
             # If the fixed code is identical to the input code, it means no changes were made (already secure)
             if fixed_code.strip() == code_content.strip():
