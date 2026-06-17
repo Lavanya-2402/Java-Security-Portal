@@ -1,0 +1,6 @@
+gradio>=6.0
+tree-sitter>=0.22.0
+tree-sitter-java
+transformers
+peft
+torch
