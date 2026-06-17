@@ -66,14 +66,20 @@ def get_model_and_tokenizer():
 
 def extract_content(output_text: str) -> tuple:
     """Extracts explanation and code block from the model's output structured format."""
-    # 1. Find the code block first
-    code_match = re.search(r"```java\s*(.*?)\s*```", output_text, re.DOTALL)
+    # 1. Find the code block first (case-insensitive for 'java')
+    code_match = re.search(r"```java\s*(.*?)\s*```", output_text, re.DOTALL | re.IGNORECASE)
     code = code_match.group(1).strip() if code_match else ""
     
     if not code:
         code_match = re.search(r"```\s*(.*?)\s*```", output_text, re.DOTALL)
         code = code_match.group(1).strip() if code_match else ""
         
+    if not code:
+        # Fallback: if no backticks are generated at all, extract all text after the Fixed Code header
+        fixed_code_header_match = re.search(r"###\s*.*Fixed\s*Code\s*(.*)", output_text, re.DOTALL | re.IGNORECASE)
+        if fixed_code_header_match:
+            code = fixed_code_header_match.group(1).strip()
+            
     # 2. Find the explanation (emoji-independent)
     explanation_match = re.search(
         r"###\s*.*Explanation\s*(.*?)\s*(###\s*.*Fixed Code|###\s*.*Code|$)", 
@@ -87,7 +93,7 @@ def extract_content(output_text: str) -> tuple:
         # Fallback: remove the code block and headers, use the remaining text as explanation
         temp_text = output_text
         if code:
-            temp_text = re.sub(r"```java\s*.*?\s*```", "", temp_text, flags=re.DOTALL)
+            temp_text = re.sub(r"```java\s*.*?\s*```", "", temp_text, flags=re.DOTALL | re.IGNORECASE)
             temp_text = re.sub(r"```\s*.*?\s*```", "", temp_text, flags=re.DOTALL)
             
         # Clean up header finding lines
