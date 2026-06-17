@@ -66,45 +66,58 @@ def get_model_and_tokenizer():
 
 def extract_content(output_text: str) -> tuple:
     """Extracts explanation and code block from the model's output structured format."""
-    # 1. Find the code block first (case-insensitive for 'java', allows missing closing backticks)
-    code_match = re.search(r"```java\s*(.*?)(?:```|$)", output_text, re.DOTALL | re.IGNORECASE)
-    code = code_match.group(1).strip() if code_match else ""
+    # 1. Clean up separator lines
+    output_text = re.sub(r"^[─═]+$", "", output_text, flags=re.MULTILINE)
     
-    if not code:
-        code_match = re.search(r"```\s*(.*?)(?:```|$)", output_text, re.DOTALL)
-        code = code_match.group(1).strip() if code_match else ""
+    # 2. Extract code block
+    code = ""
+    # Try to find code block inside backticks first
+    code_match = re.search(r"```(?:java)?\s*(.*?)(?:```|$)", output_text, re.DOTALL | re.IGNORECASE)
+    if code_match and len(code_match.group(1).strip()) > 50:
+        code = code_match.group(1).strip()
         
     if not code:
-        # Fallback: if no backticks are generated at all, extract all text after the Fixed Code header
-        fixed_code_header_match = re.search(r"###\s*.*Fixed\s*Code\s*(.*)", output_text, re.DOTALL | re.IGNORECASE)
-        if fixed_code_header_match:
-            code = fixed_code_header_match.group(1).strip()
+        # If no backticks, look for code block starting with import or class declaration
+        code_start_match = re.search(
+            r"((?:import\s+[a-z0-9_.]+;\s*)+(?:public\s+)?class\s+\w+.*|(?:public\s+)?class\s+\w+.*)", 
+            output_text, 
+            re.DOTALL | re.IGNORECASE
+        )
+        if code_start_match:
+            code = code_start_match.group(1).strip()
             
-    # 2. Find the explanation (emoji-independent)
+    # 3. Extract explanation
+    explanation = ""
     explanation_match = re.search(
-        r"###\s*.*Explanation\s*(.*?)\s*(###\s*.*Fixed Code|###\s*.*Code|$)", 
+        r"###\s*.*Explanation\s*(.*?)\s*(###\s*.*Fixed Code|###\s*.*Code|```(?:java)?|$)", 
         output_text, 
         re.DOTALL | re.IGNORECASE
     )
-    
     if explanation_match:
         explanation = explanation_match.group(1).strip()
-    else:
-        # Fallback: remove the code block and headers, use the remaining text as explanation
+        
+    if explanation:
+        explanation = re.sub(r"```(?:java)?", "", explanation, flags=re.IGNORECASE).strip()
+        
+    # If explanation is empty or contains the Java code itself (swapped case)
+    if not explanation or "class " in explanation or "import " in explanation:
         temp_text = output_text
         if code:
-            temp_text = re.sub(r"```java\s*.*?\s*(?:```|$)", "", temp_text, flags=re.DOTALL | re.IGNORECASE)
-            temp_text = re.sub(r"```\s*.*?\s*(?:```|$)", "", temp_text, flags=re.DOTALL)
+            parts = output_text.split(code)
+            temp_text = parts[0]
             
-        # Clean up header finding lines
         temp_text = re.sub(r"###\s*.*Finding\s*\d+", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"###\s*.*Vulnerability\s*Analysis", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"###\s*.*Explanation", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"###\s*.*Fixed\s*Code", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Status\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Type\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
         temp_text = re.sub(r"\*\s+\*\*Severity\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"```(?:java)?", "", temp_text, flags=re.IGNORECASE)
         
         explanation = temp_text.strip()
         
-    if not explanation or len(explanation) < 5:
+    if not explanation or len(explanation) < 10:
         explanation = "Vulnerability detected. Review the remediated code block above for mitigation fixes."
         
     return explanation, code
@@ -144,6 +157,10 @@ def run_remediation_task(task_id: str, code_content: str):
             
         generated_text = tokenizer_obj.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
         
+        print("\n=================== DEBUG: MODEL GENERATED TEXT ===================")
+        print(generated_text)
+        print("===================================================================\n")
+        
         # 4. Parse Results
         is_secure = "completely secure" in generated_text.lower() or "no changes are required" in generated_text.lower()
         
@@ -153,6 +170,11 @@ def run_remediation_task(task_id: str, code_content: str):
             fixed_code = code_content
         else:
             explanation, fixed_code = extract_content(generated_text)
+            
+            print("\n=================== DEBUG: PARSED CONTENT ===================")
+            print(f"EXPLANATION:\n{explanation}\n")
+            print(f"FIXED CODE:\n{fixed_code}")
+            print("=============================================================\n")
             
             # Extract vulnerability type override from LLM finding section
             type_match = re.search(r"\*\s+\*\*Type\*\*:\s*([^\n\r]+)", generated_text, re.IGNORECASE)
