@@ -6,7 +6,7 @@ import gradio as gr
 
 # Ensure local imports work regardless of execution context
 try:
-    from java_security_portal.rag import (
+    from security_portal.rag import (
         detect_vulnerability_type,
         retrieve_vulnerability_info,
         build_augmented_prompt,
