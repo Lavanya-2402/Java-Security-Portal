@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMD Instinct™ Java Security Portal</title>
+    <title>SecureCode AI</title>
+    <!-- Google Fonts integration for a premium aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Glowing Header Banner -->
+        <!-- Glowing Compact Header Banner -->
         <header class="header-banner">
-            <h1>AMD Instinct™ Java Security Portal</h1>
-            <p>Fine-Tuned 32B Model & RAG-Augmented Remediation Pipeline</p>
+            <div class="header-content">
+                <h1>SecureCode AI</h1>
+                <p>Fine-Tuned 32B Model & RAG-Augmented Remediation Pipeline</p>
+            </div>
+            <div class="team-badge">Team 3276</div>
         </header>
 
         <!-- Main Layout Split Grid -->
@@ -47,6 +54,7 @@
                         <textarea id="remediated-code" readonly placeholder="Secure code output will appear here..." spellcheck="false"></textarea>
                     </div>
                     <div class="output-actions">
+                        <button id="download-btn" class="btn btn-secondary" style="margin-right: 10px;">📥 Download File</button>
                         <button id="copy-btn" class="btn btn-secondary">📋 Copy Code</button>
                     </div>
                 </div>
@@ -57,7 +65,7 @@
         <div id="loading-overlay" class="hidden">
             <div class="spinner-box">
                 <div class="spinner"></div>
-                <p id="loading-text">Analyzing code with AMD Instinct GPU...</p>
+                <p id="loading-text">Analyzing code with GPU model...</p>
             </div>
         </div>
 
@@ -70,17 +78,9 @@
                 </div>
             </div>
 
-            <!-- CWE Guidelines Card -->
+            <!-- CWE Guidelines & Detailed Analysis Injected Here -->
             <div id="cwe-card" class="cwe-card">
-                <!-- CWE reference info injected here -->
-            </div>
-
-            <!-- Detailed Analysis Markdown -->
-            <div class="analysis-details">
-                <h4>📝 Detailed Vulnerability & Fix Analysis</h4>
-                <div id="explanation-box" class="explanation-box">
-                    <!-- Explanation text injected here -->
-                </div>
+                <!-- Injected dynamically via app.js -->
             </div>
         </section>
 

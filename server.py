@@ -4,6 +4,7 @@ import sys
 import uuid
 import threading
 import torch
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +22,14 @@ sys.modules['transformers.integrations.deepgemm'] = MagicMock()
 MODEL_ID = "Qwen/Qwen2.5-Coder-32B-Instruct"
 ADAPTER_PATH = "/workspace/shared/lavanya/Java-Dataset-New/java-dataset/RAG-Implemenation/java-vuln-adapter-32b-full"
 
-app = FastAPI(title="AMD Instinct™ Java Security Portal Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("⏳ Pre-loading GPU model on startup...")
+    get_model_and_tokenizer()
+    yield
+    print("🧹 Cleaning up resources...")
+
+app = FastAPI(title="SecureCode AI", lifespan=lifespan)
 
 # Enable CORS for development
 app.add_middleware(
@@ -218,11 +226,6 @@ def run_remediation_task(task_id: str, code_content: str):
             "error": str(e)
         }
 
-@app.on_event("startup")
-def startup_event():
-    """Load model on startup (main thread) so that background threads run safely."""
-    print("⏳ Pre-loading GPU model on startup...")
-    get_model_and_tokenizer()
 
 @app.post("/api/analyze")
 async def analyze_code(request: AnalyzeRequest, background_tasks: BackgroundTasks):

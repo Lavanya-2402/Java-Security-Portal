@@ -1,4 +1,4 @@
-/* Premium Aesthetic Styling for AMD Instinct™ Java Security Portal */
+/* Premium Aesthetic Styling for SecureCode AI */
 
 :root {
     --bg-main: #0b0f19;
@@ -21,7 +21,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-primary);
     line-height: 1.6;
@@ -33,33 +33,51 @@ body {
     padding: 24px 20px;
 }
 
-/* Glowing Header Banner */
+/* Glowing Compact Header Banner */
 .header-banner {
-    background: linear-gradient(135deg, #1e1b4b, #4c1d95, #0a0813);
+    background: linear-gradient(135deg, #0f172a, #1e1b4b, #030712);
     border-radius: 12px;
-    padding: 30px 20px;
-    margin-bottom: 30px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(124, 58, 237, 0.15);
+    padding: 18px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(139, 92, 246, 0.15);
+}
+
+.header-content {
+    text-align: left;
 }
 
 .header-banner h1 {
     margin: 0;
-    font-size: 2.2rem;
-    font-weight: 850;
-    letter-spacing: -0.75px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     background: linear-gradient(to right, #ffffff, #c084fc, #818cf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .header-banner p {
-    color: #c084fc;
-    font-size: 0.98rem;
-    margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 4px;
     margin-bottom: 0;
     font-weight: 500;
+}
+
+.team-badge {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+    letter-spacing: 0.5px;
 }
 
 /* Card Styling */

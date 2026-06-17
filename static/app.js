@@ -1,16 +1,16 @@
-// JS Controller for AMD Instinct Security Portal
+// JS Controller for SecureCode AI
 
 document.addEventListener("DOMContentLoaded", () => {
     const inputCode = document.getElementById("input-code");
     const remediatedCode = document.getElementById("remediated-code");
     const scanBtn = document.getElementById("scan-btn");
     const copyBtn = document.getElementById("copy-btn");
+    const downloadBtn = document.getElementById("download-btn");
     const loadingOverlay = document.getElementById("loading-overlay");
     const loadingText = document.getElementById("loading-text");
     const resultsSection = document.getElementById("results-section");
     const statusBadges = document.getElementById("status-badges");
     const cweCard = document.getElementById("cwe-card");
-    const explanationBox = document.getElementById("explanation-box");
 
     // Copy output code to clipboard
     copyBtn.addEventListener("click", () => {
@@ -23,6 +23,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 copyBtn.innerText = originalText;
             }, 2000);
         }
+    });
+
+    // Download remediated Java code as file
+    downloadBtn.addEventListener("click", () => {
+        const code = remediatedCode.value;
+        if (!code.trim()) return;
+        
+        // Match class name dynamically
+        const classMatch = code.match(/class\s+(\w+)/);
+        const className = classMatch ? classMatch[1] : "Remediated";
+        const filename = `${className}.java`;
+        
+        const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     });
 
     // Run Code Scan & Remediation via Background Task Polling
@@ -110,16 +131,34 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderResults(result) {
         remediatedCode.value = result.fixed_code;
         
+        const isFallbackExp = result.explanation.includes("Vulnerability detected");
         const safeExplanation = escapeHtml(result.explanation);
         const safeRawOutput = escapeHtml(result.raw_output || "");
         
-        explanationBox.innerHTML = `
-            <div style="white-space: pre-wrap;">${safeExplanation}</div>
-            ${result.raw_output ? `
-            <details style="margin-top: 18px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-                <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.82rem; font-weight: 600; outline: none; user-select: none;">🤖 View Raw GPU Model Output</summary>
-                <pre style="margin-top: 10px; white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.85rem; color: #a5b4fc; background: #030712; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); max-height: 300px; overflow-y: auto; text-align: left;">${safeRawOutput}</pre>
-            </details>` : ''}
+        let explanationHtml = "";
+        if (!isFallbackExp && result.explanation.trim()) {
+            explanationHtml = `
+                <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    <h5 style="margin: 0 0 8px 0; color: #c084fc; font-size: 0.95rem; font-weight: 700;">📝 Detailed Vulnerability & Fix Analysis</h5>
+                    <p style="margin: 0; font-size: 0.92rem; line-height: 1.5; color: #e2e8f0; white-space: pre-wrap; text-align: left;">${safeExplanation}</p>
+                </div>
+            `;
+        }
+
+        const rawOutputHtml = result.raw_output ? `
+            <details style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; outline: none; user-select: none;">🤖 View Raw GPU Model Output</summary>
+                <pre style="margin-top: 10px; white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82rem; color: #a5b4fc; background: #030712; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); max-height: 250px; overflow-y: auto; text-align: left;">${safeRawOutput}</pre>
+            </details>
+        ` : '';
+
+        // Render CWE metadata, explanation, and raw output in a single unified card
+        cweCard.innerHTML = `
+            <h4>CWE Reference Guidelines</h4>
+            <p><strong>Description:</strong> ${result.description}</p>
+            <p style="margin-bottom: 0; color: #34d399;"><strong>Mitigation Guide:</strong> ${result.remediation}</p>
+            ${explanationHtml}
+            ${rawOutputHtml}
         `;
 
         // Render Status Badges
@@ -130,13 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="badge ${severityClass}">Severity: ${result.severity}</span>
             <span class="badge badge-vulnerable">CWE: ${result.cwe}</span>
             <span class="badge ${syntaxClass}">${result.validation_status}</span>
-        `;
-
-        // Render CWE metadata block
-        cweCard.innerHTML = `
-            <h4>CWE Reference Guidelines</h4>
-            <p><strong>Description:</strong> ${result.description}</p>
-            <p style="margin-bottom: 0; color: #34d399;"><strong>Mitigation Guide:</strong> ${result.remediation}</p>
         `;
 
         // Reveal results section
