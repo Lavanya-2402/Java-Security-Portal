@@ -66,15 +66,40 @@ def get_model_and_tokenizer():
 
 def extract_content(output_text: str) -> tuple:
     """Extracts explanation and code block from the model's output structured format."""
-    explanation_match = re.search(r"### 📝 Explanation\s*(.*?)\s*(### 🛠️|$)", output_text, re.DOTALL)
-    explanation = explanation_match.group(1).strip() if explanation_match else "No explanation provided."
-    
+    # 1. Find the code block first
     code_match = re.search(r"```java\s*(.*?)\s*```", output_text, re.DOTALL)
     code = code_match.group(1).strip() if code_match else ""
     
     if not code:
         code_match = re.search(r"```\s*(.*?)\s*```", output_text, re.DOTALL)
         code = code_match.group(1).strip() if code_match else ""
+        
+    # 2. Find the explanation (emoji-independent)
+    explanation_match = re.search(
+        r"###\s*.*Explanation\s*(.*?)\s*(###\s*.*Fixed Code|###\s*.*Code|$)", 
+        output_text, 
+        re.DOTALL | re.IGNORECASE
+    )
+    
+    if explanation_match:
+        explanation = explanation_match.group(1).strip()
+    else:
+        # Fallback: remove the code block and headers, use the remaining text as explanation
+        temp_text = output_text
+        if code:
+            temp_text = re.sub(r"```java\s*.*?\s*```", "", temp_text, flags=re.DOTALL)
+            temp_text = re.sub(r"```\s*.*?\s*```", "", temp_text, flags=re.DOTALL)
+            
+        # Clean up header finding lines
+        temp_text = re.sub(r"###\s*.*Finding\s*\d+", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"\*\s+\*\*Status\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"\*\s+\*\*Type\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
+        temp_text = re.sub(r"\*\s+\*\*Severity\*\*:\s*.*", "", temp_text, flags=re.IGNORECASE)
+        
+        explanation = temp_text.strip()
+        
+    if not explanation or len(explanation) < 5:
+        explanation = "Vulnerability detected. Review the remediated code block above for mitigation fixes."
         
     return explanation, code
 
