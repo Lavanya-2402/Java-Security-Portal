@@ -1,47 +1,5 @@
 // JS Controller for AMD Instinct Security Portal
 
-const EXAMPLES = {
-    sqli: `// SQL Injection Example
-public void getUser(String userId) throws SQLException {
-    String query = "SELECT * FROM users WHERE id = '" + userId + "'";
-    Statement stmt = connection.createStatement();
-    ResultSet rs = stmt.executeQuery(query);
-}`,
-    path: `// Path Traversal Example
-public File getProfilePicture(String filename) {
-    File baseDir = new File("/var/www/uploads");
-    return new File(baseDir, filename);
-}`,
-    cmd: `// Command Injection Example
-public void pingHost(String host) throws IOException {
-    String command = "ping -c 3 " + host;
-    Runtime.getRuntime().exec(command);
-}`,
-    xss: `// Cross-Site Scripting (XSS) Example
-public void renderUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String name = request.getParameter("name");
-    response.getWriter().write("<html><body><h1>Hello " + name + "</h1></body></html>");
-}`,
-    deserial: `// Insecure Deserialization Example
-public Object deserializeData(byte[] data) throws Exception {
-    ByteArrayInputStream bais = new ByteArrayInputStream(data);
-    ObjectInputStream ois = new ObjectInputStream(bais);
-    return ois.readObject();
-}`,
-    buffer: `// Buffer Overflow Example
-public void copyData(byte[] source) {
-    ByteBuffer buffer = ByteBuffer.allocate(10);
-    System.arraycopy(source, 0, buffer.array(), 0, source.length);
-}`,
-    secure: `// Secure Code Example
-public void getUserSecure(String userId) throws SQLException {
-    String query = "SELECT * FROM users WHERE id = ?";
-    PreparedStatement pstmt = connection.prepareStatement(query);
-    pstmt.setString(1, userId);
-    ResultSet rs = pstmt.executeQuery();
-}`
-};
-
 document.addEventListener("DOMContentLoaded", () => {
     const inputCode = document.getElementById("input-code");
     const remediatedCode = document.getElementById("remediated-code");
@@ -53,18 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusBadges = document.getElementById("status-badges");
     const cweCard = document.getElementById("cwe-card");
     const explanationBox = document.getElementById("explanation-box");
-
-    // Load example on button click
-    document.querySelectorAll(".example-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const type = btn.getAttribute("data-type");
-            if (EXAMPLES[type]) {
-                inputCode.value = EXAMPLES[type];
-                // Smooth scroll to input
-                inputCode.scrollIntoView({ behavior: "smooth" });
-            }
-        });
-    });
 
     // Copy output code to clipboard
     copyBtn.addEventListener("click", () => {
